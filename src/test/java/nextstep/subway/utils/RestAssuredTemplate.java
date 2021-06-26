@@ -4,7 +4,6 @@ import io.restassured.RestAssured;
 import io.restassured.response.ExtractableResponse;
 import io.restassured.response.Response;
 import org.springframework.http.MediaType;
-import java.util.Map;
 
 public final class RestAssuredTemplate {
     private final String baseUrl;
@@ -34,21 +33,21 @@ public final class RestAssuredTemplate {
                 .extract();
     }
 
-    public ExtractableResponse<Response> post(final Map<String, String> params) {
+    public <T> ExtractableResponse<Response> post(final T body) {
         return RestAssured.given().log().all()
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .body(params)
+                .body(body)
                 .when()
                 .post(baseUrl)
                 .then().log().all()
                 .extract();
     }
 
-    public ExtractableResponse<Response> put(final Long id, final Map<String, String> params) {
+    public <T> ExtractableResponse<Response> put(final Long id, final T body) {
         return RestAssured.given().log().all()
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
                 .pathParam("id", id)
-                .body(params)
+                .body(body)
                 .when()
                 .put(baseUrlAndId)
                 .then().log().all()

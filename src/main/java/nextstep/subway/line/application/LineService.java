@@ -29,11 +29,18 @@ public class LineService {
     private final StationRepository stationRepository;
 
     @Transactional(readOnly = true)
-    public LineResponse findLine(final Long id) {
-        Line line = lineRepository.findById(id)
-                .orElseThrow(() -> new LineNotFoundException());
+    public Line findLineById(Long lineId) {
+        return lineRepository.findById(lineId).orElseThrow(LineNotFoundException::new);
+    }
 
-        return LineResponse.of(line);
+    @Transactional(readOnly = true)
+    public Section findSectionById(Long sectionId) {
+        return sectionRepository.findById(sectionId).orElseThrow(SectionNotFoundException::new);
+
+    }
+    @Transactional(readOnly = true)
+    public Station findStationById(Long stationId) {
+        return stationRepository.findById(stationId).orElseThrow(StationNotFoundException::new);
     }
 
     @Transactional(readOnly = true)
@@ -46,20 +53,23 @@ public class LineService {
     }
 
     @Transactional(readOnly = true)
-    public SectionResponse findSection(final Long id) {
-        Section section = sectionRepository.findById(id)
-                .orElseThrow(() -> new SectionNotFoundException());
-
-        return SectionResponse.of(section);
-    }
-
-    @Transactional(readOnly = true)
     public List<SectionResponse> findAllSections() {
         List<Section> sections = sectionRepository.findAll();
 
         return sections.stream()
                 .map(SectionResponse::of)
                 .collect(Collectors.toList());
+    }
+
+    public LineResponse findLine(final Long id) {
+        Line line = findLineById(id);
+
+        return LineResponse.of(line);
+    }
+
+    public SectionResponse findSection(final Long id) {
+        Section section = findSectionById(id);
+        return SectionResponse.of(section);
     }
 
     public LineResponse saveLine(final LineRequest request) {
@@ -71,7 +81,7 @@ public class LineService {
     }
 
     public SectionResponse appendSection(final Long id, final SectionRequest request) {
-        Line line = lineRepository.findById(id).orElseThrow(() -> new LineNotFoundException());
+        Line line = findLineById(id);
 
         Section section = registerSection(request, line);
 
@@ -79,8 +89,7 @@ public class LineService {
     }
 
     public void updateLine(final Long id, final LineRequest request) {
-        Line line = lineRepository.findById(id)
-                .orElseThrow(() -> new LineNotFoundException());
+        Line line = findLineById(id);
 
         line.update(request.toLine());
     }
@@ -89,23 +98,18 @@ public class LineService {
         lineRepository.deleteById(id);
     }
 
-    public void deleteSectionByStationId(final Long lindId, final Long stationId) {
-        Line line = lineRepository.findById(lindId)
-                .orElseThrow(() -> new LineNotFoundException());
+    public void deleteSectionByStationId(final Long lineId, final Long stationId) {
+        Line line = findLineById(lineId);
 
-        Station station = stationRepository.findById(stationId)
-                .orElseThrow(() -> new StationNotFoundException());
+        Station station = findStationById(stationId);
 
         Sections sections = line.getSections();
         sections.remove(station);
     }
 
     private Section registerSection(final SectionRequest request, final Line line) {
-        Station upStation = stationRepository.findById(request.getUpStationId())
-                .orElseThrow(() -> new StationNotFoundException());
-
-        Station downStation = stationRepository.findById(request.getDownStationId())
-                .orElseThrow(() -> new StationNotFoundException());
+        Station upStation = findStationById(request.getUpStationId());
+        Station downStation = findStationById(request.getDownStationId());
 
         Section section = Section.builder()
                 .upStation(upStation)
